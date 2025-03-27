@@ -42,7 +42,7 @@ def select_key_events(up_hooks: dict[str, Callable[[], None]], down_hooks: dict[
             tty.setcbreak(fd) # alternatively: tty.setraw(fd)
             if select.select([sys.stdin], [], [], select_timeout_ms / 1e3)[0]: # I/O multiplexing, with short timeout (must be calibrated to be less than the delay between two repeated key presses (~33ms by default in Windows))
                 chars = sys.stdin.read(3) # read up to 3 chars non-blockingly and without needing to press enter (cbreak mode). normally, a single char would suffice, but for some odd reason, when pressing up arrow (^[[A), it doesn't send all 3 bytes into the input buffer (https://chatgpt.com/share/67e59b49-75ec-800a-a346-06fcf3016fba). But this workaround works
-                if chars == '\004': # CTRL-D, exit (and run code from finally block)
+                if chars == "\004": # CTRL-D, exit (and run code from finally block)
                     break
                 current_delay_ms[chars] = 0 # it's 0 ms ago that a key was pressed
                 if not pressed[chars]: # it's the first time this key was received, so it must be a press down
@@ -97,13 +97,15 @@ up_hooks = defaultdict(lambda: lambda: None) # Factory that returns functions th
 down_hooks = defaultdict(lambda: lambda: None)
 
 # Register hooks
-up_hooks['[A'] = lambda: print("Up pressed")
-down_hooks['[A'] = lambda: print("Up released")
+up_hooks["\033[A"] = lambda: print("Up pressed")
+down_hooks["\033[A"] = lambda: print("Up released")
 
-up_hooks['[B'] = lambda: print("Down pressed")
-down_hooks['[B'] = lambda: print("Down released")
+up_hooks["\033[B"] = lambda: print("Down pressed")
+down_hooks["\033[B"] = lambda: print("Down released")
 
 kbd_init_delay_ms, kbd_repeat_delay_ms = calibrate_keyboard_delays()
+
+print("Press (and/or hold) the Up and Down keys to see it working")
 
 select_key_events(
     up_hooks,
